@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Cristián Frigolett C." />
+
+
+<title>Bayesian dose-response relationship for toxic substance</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Genetic Algorithm: The Travelling Salesman Problem</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">Bayesian dose-response relationship for toxic substance</h1>
+<h4 class="author">Cristián Frigolett C.</h4>
+<h4 class="date">24-03-2022</h4>
+
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#dose-response-model">Dose Response Model</a><ul>
+<li><a href="#introduction">Introduction</a></li>
+<li><a href="#bayesian-model">Bayesian model</a></li>
+<li><a href="#mcmc-chains">MCMC Chains</a></li>
+<li><a href="#convergence">Convergence</a></li>
+<li><a href="#sensitivity-analysis">Sensitivity Analysis</a></li>
+<li><a href="#summary-of-posterior-distributions">Summary of posterior distributions</a></li>
+<li><a href="#posterior-dose-response-relationship">posterior dose-response relationship</a></li>
+</ul></li>
+</ul>
+</div>
+
+<div style="text-align: justify">
+
+
+
+
+
+<div id="dose-response-model" class="section level1">
+<h1>Dose Response Model</h1>
+<div id="introduction" class="section level2">
+<h2>Introduction</h2>
+<p>The first project concerns determining the dose-response relationship of a possible toxic product. Diethylene Glycol Dimethyl Ether (DYME), also referred to as diglyme, bis(2-methoxyethyl) ether is a high-volume industrial chemical with diverse applications. It is used to make industrial solvents, cosmetics, protective coatings, solvents in chemical synthesis, and is used in manufacturing of textile dyes. Price et al. (1987) describe a study in which timed-pregnant CD-1 mice were dosed by gavage with DYME in distilled water. Dosing occurred during the period of major organogenesis and structural development of the foetuses (gestational age 6 through 15). Relating the dose of DYME to the incidence of malformations in foetuses gives the following results:</p>
+<br/>
+<p align="center">
+<table class=" lightable-material lightable-striped lightable-hover" style='font-family: "Source Sans Pro", helvetica, sans-serif; margin-left: auto; margin-right: auto;'>
+<thead>
+<tr>
+<th style="text-align:right;">
+Dose: d
+</th>
+<th style="text-align:right;">
+Number of foetuses: N
+</th>
+<th style="text-align:right;">
+Number of malformations: y
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+282
+</td>
+<td style="text-align:right;">
+67
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+62.5
+</td>
+<td style="text-align:right;">
+225
+</td>
+<td style="text-align:right;">
+34
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+125.0
+</td>
+<td style="text-align:right;">
+290
+</td>
+<td style="text-align:right;">
+193
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+250.0
+</td>
+<td style="text-align:right;">
+261
+</td>
+<td style="text-align:right;">
+250
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+500.0
+</td>
+<td style="text-align:right;">
+141
+</td>
+<td style="text-align:right;">
+141
+</td>
+</tr>
+</tbody>
+</table>
+<h4 align="center">
+Table: Malformation data
+</h4>
+</p>
+<p><br/></p>
+<p>Assume that the likelihood of the experiment is specified by:</p>
+<h5 align="center">
+<span class="math inline">\(y \sim binomial(N, \pi )\\ logit(\pi) = \alpha + \beta d\)</span>
+</h5>
+<p>The parameter of interest is <span class="math inline">\(\beta\)</span> since it indicates the dose <span class="math inline">\(d\)</span> effect.</p>
+<p>Vague prior probability distributions are taken for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span>. A bayesian model is formulated using these priors (likelihood and prior). Two MCMC chains with different starting values are generated and convergence is checked with the appropriate techniques.</p>
+</div>
+<div id="bayesian-model" class="section level2">
+<h2>Bayesian model</h2>
+<p>For binomial response <span class="math inline">\(y\)</span> of the logistic regression model, the likelihood is given by:</p>
+<h5 align="center">
+<span class="math inline">\(p(y| \alpha, \beta) = \displaystyle\prod_{i=1}^{n} \pi_i^{y_i}(1-\pi_i)^{n_i-y_i} = \displaystyle\prod_{i=1}^{n} \left( \frac{e^{\alpha + \beta d_i}}{1 + e^{\alpha + \beta d_i}} \right)^{y_i} \left(\frac{1}{1 + e^{\alpha + \beta d_i}} \right)^{n_i-y_i}\)</span>
+</h5>
+<h5 align="center">
+<span class="math inline">\(p(y| \alpha, \beta) = exp \left( n \bar{y} \alpha + \beta \displaystyle\sum_{i=1} ^{n}d_i y_i -\displaystyle\sum_{i=1} ^{n} log(1 + exp(\alpha + \beta d_i)) \right)\)</span>
+</h5>
+<p>A suitably weak prior for each of the coefficients is normally distributed with mean 0 and a large variance of 10,000 to denote uncertainty, which is equivalent to a precision of 1/10000 = 0.0001.</p>
+<h5 align="center">
+<span class="math inline">\(\alpha \sim \mathcal{N}(0, 10000)\\ \beta \sim \mathcal{N}(0, 10000)\)</span>
+</h5>
+<p>In this case, the density of <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> draws a nearly flat curve.</p>
+<p>Applying the Bayes’ theorem, the posterior density, which is the product of the likelihood function and prior, is given by:</p>
+<h5 align="center">
+<span class="math inline">\(p(\alpha \ ,\beta \ |\ y) \propto p(y|\ \alpha, \ \beta)p(\alpha)p(\beta)\)</span>
+</h5>
+</div>
+<div id="mcmc-chains" class="section level2">
+<h2>MCMC Chains</h2>
+<p>Different starting values have been chosen for the two MCMC chains. The initial values of the first chain are equal to the mean of the prior distribution chosen for these parameters while the second chain has starting values equal to the maximum likelihood estimates of the parameters. These values were chosen since they are likely under the posterior distribution; thereby, speeding up the convergence.</p>
+<br/>
+<p align="center">
+<table>
+<thead>
+<tr class="header">
+<th align="left">Initial values</th>
+<th align="right"><span class="math inline">\(\alpha\)</span></th>
+<th align="right"><span class="math inline">\(\beta\)</span></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left"><span class="math inline">\(1^{st}\)</span> Chain</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(2^{nd}\)</span> Chain</td>
+<td align="right">-1.78190</td>
+<td align="right">0.01823</td>
+</tr>
+</tbody>
+</table>
+<h4 align="center">
+Table 1: Initial Values for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span>
+</h4>
+</p>
+<p><br/></p>
+<p>For the chains, we used 10,000 iterations with the initial 5,000 iterations discarded (i.e., burn-in part). The rest of the 5,000 values will therefore be used to estimate the posterior measures.</p>
+</div>
+<div id="convergence" class="section level2">
+<h2>Convergence</h2>
+<p>To assess the convergence of our chains, we performed a visual inspection of the trace plots and the autocorrelation plots and a statistical test such as the Gelman-Rubin diagnostic test.</p>
+<p>Looking at the trace plots of the coefficients <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span>, there seem to be large steps between the successive draws and the chain does not seem to stay in the same state for too long (i.e., not highly autocorrelated). This indicates independent sampling behavior since the chains run quickly through the posterior distribution. Furthermore, independent of the starting point, the chains rapidly start sampling from the same distribution.</p>
+<br/>
+<p align="center">
+<img src="images/fig1.png" >
+<h4 align="center">
+Figure 1: Trace plot for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> for normal priors
+</h4>
+</p>
+<p><br/></p>
+<p>The autocorrelation plots do not indicate high autocorrelation issue as well. Indeed, autocorrelation is larger at short lags but remains around zero as the lag increases. This means that, in comparison with a high autocorrelation chain, we can take a shorter burn in part because it takes fewer iterations to forget the initial position, and it also means that the remaining part needs a shorter period to obtain stable posterior measures. Figure 2.</p>
+<br/>
+<p align="center">
+<img src="images/fig2.png" >
+<h4 align="center">
+Figure 2: Autocorrelation plot for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> for normal priors
+</h4>
+</p>
+<p><br/></p>
+<p>Gelman-Rubin diagnostic test is a more formal way of assessing convergence. It measures whether there is a significant difference between the within-chain and between-chain variance by a value called “potential scale reduction factors”. A value substantially above 1 indicates a lack of convergence. Because the point estimate for the factor of 𝛼 and 𝛽 are equal to 1, we do not have a reason to believe in non-convergence. Figure 3 also illustrates how the potential scale reduction factor changes as the number of iterations increases. Again, this indicates no anomaly as the values are not substantially above 1 and the factors approach 1 as iteration increases.</p>
+<br/>
+<p align="center">
+<img src="images/fig3.png" >
+<h4 align="center">
+Figure 3: Gelman-Rubin diagnostic plot for normal priors
+</h4>
+</p>
+<p><br/></p>
+<p>We could say that the number of burn-in values and iterations are sufficient since there seems to be convergence in both chains, which also ensures the stability of the posterior measures.</p>
+<p>As a side note, the vague normal prior has the potential of being rather informative in the context of non-linear transformations, as is the case for the logit link in logistic regression. Even though a high variance normal distribution might be uninformative at the level of the linear coefficient, this is no longer the case in the probability scale, which becomes informative as it displays a bimodal distribution centered at 0 and 1. Alternative prior (e.g., t-distribution), attain a uniform probability distribution over 0 and 1 after transformation of the logistic regression coefficients. Nevertheless, in some scenarios, the transformation of a vague normal prior is not impactful (Northrup and Gerber, 2019). The following plots illustrate such priors:</p>
+``<br/>
+<p align="center">
+<img src="images/fig4.png" >
+<h4 align="center">
+Figure 4: Transformation of vague priors
+</h4>
+</p>
+<p><br/></p>
+</div>
+<div id="sensitivity-analysis" class="section level2">
+<h2>Sensitivity Analysis</h2>
+<p>Sensitivity analysis is the practice of understanding the variation and uncertainty of the posterior inferences as a result of a different prior or model used in the analysis. For example, we might want to compare different priors, and compare the results of the separate analyses. we perform a sensitivity analysis by changing the prior distribution for the dose effect into a t-distribution with 4 degrees of freedom.</p>
+<p>Using the same MCMC settings (i.e., initial values for the chains, number of iterations, and burn-in part), we again took 2 MCMC chains but this time using a different prior for 𝛼 and 𝛽, which is given by:</p>
+<h5 align="center">
+<span class="math inline">\(\alpha \sim t_4\\ \beta \sim t_4\)</span>
+</h5>
+<p>The model specification used in the software is given by:</p>
+<p>Looking at the trace, autocorrelation, and Gelman-Rubin diagnostic plots, we do not have a strong reason to believe there is high autocorrelation in the samples. At this point, both chains converged well using Normal and t-distribution priors. The posterior summary measures will be presented in the subsequent part to assess the sensitivity of the priors used.</p>
+<br/>
+<p align="center">
+<img src="images/fig5.png" >
+<h4 align="center">
+Figure 5: Trace plot for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> for <span class="math inline">\(t\)</span>-distribution priors
+</h4>
+</p>
+<p><br/></p>
+<br/>
+<p align="center">
+<img src="images/fig6.png" >
+<h4 align="center">
+Figure 6: Autocorrelation plot for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> for <span class="math inline">\(t\)</span>-distribution priors Graph
+</h4>
+</p>
+<p><br/></p>
+<br/>
+<p align="center">
+<img src="images/fig7.png" >
+<h4 align="center">
+Figure 7: Gelman-Rubin diagnostic t for <span class="math inline">\(t\)</span>-distribution priors Graph
+</h4>
+</p>
+<p><br/></p>
+</div>
+<div id="summary-of-posterior-distributions" class="section level2">
+<h2>Summary of posterior distributions</h2>
+<p>Table 2 presents the posterior measures of the samples obtained using different priors for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> (after discarding the burn-in period). As could be expected from using vague priors, the posterior mean obtained from the MCMC procedure is close to the maximum likelihood estimates ( <span class="math inline">\(\alpha\)</span>: -1.788 vs -1.782; <span class="math inline">\(\beta\)</span>: 0.018 vs 0.018) and the posterior standard deviation is small. The posterior mean, standard deviation, and the 95% highest (posterior) density (HPD) interval for <span class="math inline">\(\beta\)</span> are almost the same between the priors used while the estimates for <span class="math inline">\(\alpha\)</span> are not too far away from each other. In other words, the choice of vague prior (i.e., whether Normal or <span class="math inline">\(t\)</span>-distribution) does not seem to affect the posterior measures much.</p>
+<p>To assess the accuracy of the posterior estimates, we have evaluated the Monte Carlo standard error (or Time-series SE) against the posterior standard deviation. If this value is less than 5% of the posterior standard deviation, then it indicates that the samples obtained are enough. The TSSE/SD column from table 2 gives the relationship of the Monte Carlo standard error and the posterior standard deviation. We could see that the estimates obtained from the Normal and <span class="math inline">\(t\)</span>-distribution priors are accurate as the TSSE/SD value is less than 5% for both parameters.</p>
+<br/>
+<p align="center">
+<table>
+<thead>
+<tr class="header">
+<th align="left"></th>
+<th align="right">Mean</th>
+<th align="right">SD</th>
+<th align="right">HDP Interval</th>
+<th align="right">Time-series SE</th>
+<th align="right">TSSE/SD</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Normal priors with mean 0 and variance 10000</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\alpha\)</span></td>
+<td align="right">-1.788</td>
+<td align="right">0.130</td>
+<td align="right">[-2.053, -1.540]</td>
+<td align="right">0.002</td>
+<td align="right">0.013</td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\beta\)</span></td>
+<td align="right">0.018</td>
+<td align="right">0.001</td>
+<td align="right">[0.016, 0.021]</td>
+<td align="right">0.000</td>
+<td align="right">0.014</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(t\)</span>-distribution priors with 4 degrees of freedom</td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+<td align="right"></td>
+</tr>
+<tr class="odd">
+<td align="left"><span class="math inline">\(\alpha\)</span></td>
+<td align="right">-1.789</td>
+<td align="right">0.128</td>
+<td align="right">[-2.046, -1.545]</td>
+<td align="right">0.002</td>
+<td align="right">0.012</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(\beta\)</span></td>
+<td align="right">0.018</td>
+<td align="right">0.001</td>
+<td align="right">[0.016, 0.020]</td>
+<td align="right">0.000</td>
+<td align="right">0.013</td>
+</tr>
+</tbody>
+</table>
+<h4 align="center">
+Table 2: Posterior measures.
+</h4>
+</p>
+<p><br/></p>
+<p>The 95% HPD interval, which contains 95% of the most plausible estimates, does not include 0. We can therefore say that there is a dose-effect. When no dose is administrated, the odds of having malformations is equal to exp(-1.788) = 0.167 while a 10-point increase in the dose level is associated with an odds of exp(-1.788+0.018*10) = 0.201. Indeed, the odds increase as the dose increases. The smooth density plots for <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> in the case of the normal prior (Figure 8) and the <span class="math inline">\(t\)</span>-distributed prior (Figure 9) are consistent with each other, displaying a similar distribution, supporting the idea that they are approximating the same true posterior distribution.</p>
+<br/>
+<p align="center">
+<img src="images/fig8.png" >
+<h4 align="center">
+Figure 8: Density plot of <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> with normal priors
+</h4>
+</p>
+<p><br/></p>
+<br/>
+<p align="center">
+<img src="images/fig9.png" >
+<h4 align="center">
+Figure 9: Density plot of <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> with <span class="math inline">\(t\)</span>-distribution priors
+</h4>
+</p>
+<p><br/></p>
+</div>
+<div id="posterior-dose-response-relationship" class="section level2">
+<h2>posterior dose-response relationship</h2>
+<p>The posterior dose-response relationship was computed by plugging in the posterior mean of <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> in this formula:</p>
+<h3 align="center">
+<span class="math inline">\(\hat{\pi} = \left(\frac{exp(\hat{\alpha} \ + \ \hat{\beta} \ d_i)}{1 +exp(\hat{\alpha} \ + \ \hat{\beta} \ d_i)} \right)\)</span>
+</h3>
+<p>On the other hand, the observed probability was derived from 𝑦/𝑁. Figure 10 displays the plot of the posterior dose-response relationship against the observed probabilities of a malformation per dose, where it is apparent that there is only a little difference among the posteriors obtained using different priors. Also, even though the posterior probabilities do not exactly represent the observed probabilities, it captures the trend rather well (except at dose 62.5). Overall, the probability of malformation increases together with dose, but this rate slows down starting at around dose 250.</p>
+<br/>
+<p align="center">
+<img src="images/fig10.png" >
+<h4 align="center">
+Figure 10: Posterior dose-response relationship and observed probabilities
+</h4>
+</p>
+<p><br/> safe level of exposure can be defined as a dose corresponding to a very small increase in excess risk of <span class="math inline">\(q\)</span>, e.g. <span class="math inline">\(q\)</span> = 0.01. This is called the Benchmark dose (BMD) <span class="math inline">\(d^∗\)</span> and can be obtained by solving the equation:</p>
+<h5 align="center">
+<span class="math inline">\(r(d^∗)= \frac{P(d^∗)-P(0)}{1-P(0)}= q\)</span>,
+</h5>
+<p>with <span class="math inline">\(P(d)\)</span> the probability of an adverse effect at dose level <span class="math inline">\(d\)</span>. For a logistic regression with a linear dose model, the BMD is given by:</p>
+<h5 align="center">
+<span class="math inline">\(BMD=\frac{logit(d^*)-\alpha}{\beta}=q\)</span>
+</h5>
+<p>with <span class="math inline">\(q∗ = q(1−P(0))+P(0)\)</span>. We proceed to determine the posterior estimate of the safe level of exposure for EG corresponding with an excess risk of <span class="math inline">\(q = 0.01\)</span>.</p>
+<p>To get the posterior distribution of BMD, the following lines were added in the model specification:</p>
+<br/>
+<p align="center">
+<table>
+<thead>
+<tr class="header">
+<th align="left">Prior</th>
+<th align="right">Mean</th>
+<th align="right">HDP Interval</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Normal</td>
+<td align="right">3.740</td>
+<td align="right">[3.250, 4.233]</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(t\)</span>-distribution</td>
+<td align="right">3.745</td>
+<td align="right">[3.230, 4.240]</td>
+</tr>
+</tbody>
+</table>
+<h4 align="center">
+Table 4: Estimate of the safe level of exposure.
+</h4>
+</p>
+<p><br/></p>
+<p>The posterior mean value for BMD (using different priors) is given in Table 3. Using the Normal prior, the posterior mean value for BMD is 3.740 and the corresponding HPD interval is [3.250, 4.233]. To be certain that the increase of excess risk is kept at <span class="math inline">\(q=0.01\)</span>, the lower bound of the interval was taken as the Benchmark dose (i.e., 3.250).</p>
+<p>Finally we predict the number of malformations at dose 100 for 240 exposed fetuses at dose level 100:</p>
+<br/>
+<p align="center">
+<table>
+<thead>
+<tr class="header">
+<th align="left">Prior</th>
+<th align="right">Mean</th>
+<th align="right">HDP Interval</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">Normal</td>
+<td align="right">122.478</td>
+<td align="right">[103, 138]</td>
+</tr>
+<tr class="even">
+<td align="left"><span class="math inline">\(t\)</span>-distribution</td>
+<td align="right">122.325</td>
+<td align="right">[104, 139]</td>
+</tr>
+</tbody>
+</table>
+<h4 align="center">
+Table 5: Predicted number of malformations.
+</h4>
+</p>
+<p><br/></p>
+<p>The corresponding predicted number of malformations and credibility intervals are given in the table below. Around 122 malformations could be expected from 240 exposed fetuses at dose level 100.</p>
+</div >
+</div>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

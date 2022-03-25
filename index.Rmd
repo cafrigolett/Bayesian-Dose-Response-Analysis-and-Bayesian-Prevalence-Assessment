@@ -1,0 +1,323 @@
+---
+title: "Bayesian dose-response relationship for toxic substance"
+author: "Cristián Frigolett C."
+date: "24-03-2022"
+output: html_document
+---
+
+<div style="text-align: justify">
+
+
+```{r packages, echo=FALSE, include=FALSE}
+library(R2OpenBUGS)
+library(coda)
+library(mcmcplots)
+library(dplyr)
+library(ggplot2)
+library(bayestestR)
+library(arm)
+library(tidyverse)
+library(LearnBayes)
+#library(epiR)
+library(data.table)
+library(pander)
+library(kableExtra)
+```
+
+
+# Dose Response Model
+
+
+## Introduction
+The first project concerns determining the dose-response relationship of a possible toxic product. Diethylene Glycol Dimethyl Ether (DYME), also referred to as diglyme, bis(2-methoxyethyl) ether is a high-volume industrial chemical with diverse applications. It is used to make industrial solvents, cosmetics, protective coatings, solvents in chemical synthesis, and is used in manufacturing of textile dyes. Price et al. (1987) describe a study in which timed-pregnant CD-1 mice were dosed by gavage with DYME in distilled water. Dosing occurred during the period of major organogenesis and structural development of the foetuses (gestational age 6 through 15). Relating the dose of DYME to the incidence of malformations in foetuses gives the following results:
+
+<br/>
+<p align="center">
+
+
+```{r data table, echo=FALSE}
+# Dose Response Model
+#####################################################
+##############################################
+# DATA PREPARATION
+# Dose level
+d <- c(0,62.5,125,250,500)
+# Number of fetus
+Nfetus <- c(282,225,290,261,141)
+# Number of malformations
+y <- c(67,34,193,250,141)
+# Number of records
+n <- 5
+dyme1 <- data.frame(cbind(d,Nfetus,y))
+
+dyme1 %>%
+  kbl(col.names = c("Dose: d","Number of foetuses: N", "Number of malformations: y")) %>%
+  kable_material(c("striped", "hover"))
+```
+
+  <h4 align="center">Table: Malformation data</h4>
+</p>
+<br/>
+
+Assume that the likelihood of the experiment is specified by:
+
+<h5 align="center">$y \sim binomial(N, \pi )\\ logit(\pi) = \alpha + \beta d$</h5>
+
+The parameter of interest is $\beta$ since it indicates the dose $d$ effect.
+
+Vague prior probability distributions are taken for $\alpha$ and $\beta$. A bayesian model is formulated using these priors (likelihood and prior). Two MCMC chains with different starting values are generated and convergence is checked with the appropriate techniques.
+
+
+## Bayesian model
+
+
+For binomial response $y$ of the logistic regression model, the likelihood is given by:
+
+<h5 align="center">$p(y| \alpha, \beta) = \displaystyle\prod_{i=1}^{n} \pi_i^{y_i}(1-\pi_i)^{n_i-y_i} = \displaystyle\prod_{i=1}^{n} \left( \frac{e^{\alpha + \beta d_i}}{1 + e^{\alpha + \beta d_i}} \right)^{y_i} \left(\frac{1}{1 + e^{\alpha + \beta d_i}} \right)^{n_i-y_i}$</h5> 
+
+
+<h5 align="center">$p(y| \alpha, \beta) = exp \left( n \bar{y} \alpha + \beta \displaystyle\sum_{i=1} ^{n}d_i y_i -\displaystyle\sum_{i=1} ^{n} log(1 + exp(\alpha + \beta d_i)) \right)$</h5>
+
+A suitably weak prior for each of the coefficients is normally distributed with mean 0 and a large variance of 10,000 to denote uncertainty, which is equivalent to a precision of 1/10000 = 0.0001.
+
+<h5 align="center">$\alpha \sim  \mathcal{N}(0, 10000)\\ \beta \sim  \mathcal{N}(0, 10000)$</h5>
+
+In this case, the density of $\alpha$ and $\beta$ draws a nearly flat curve.
+
+Applying the Bayes’ theorem, the posterior density, which is the product of the likelihood function and prior, is given by:
+
+<h5 align="center">$p(\alpha \ ,\beta \ |\ y) \propto p(y|\ \alpha, \ \beta)p(\alpha)p(\beta)$</h5>
+
+```{r malformation model, include=FALSE}
+
+```
+
+## MCMC Chains
+
+Different starting values have been chosen for the two MCMC chains. The initial values of the first chain are equal to the mean of the prior distribution chosen for these parameters while the second chain has starting values equal to the maximum likelihood estimates of the parameters. These values were chosen since they are likely under the posterior distribution; thereby, speeding up the convergence.
+
+<br/>
+<p align="center">
+
+|   Initial values  |  $\alpha$   |   $\beta$    |
+|:------------|-------:|--------------------:|
+|  $1^{st}$ Chain    |  0  |  0      |
+|  $2^{nd}$ Chain    |    -1.78190    |           0.01823          |
+
+  <h4 align="center">Table 1: Initial Values for $\alpha$ and $\beta$</h4>
+</p>
+<br/>
+
+
+For the chains, we used 10,000 iterations with the initial 5,000 iterations discarded (i.e., burn-in part). The rest of the 5,000 values will therefore be used to estimate the posterior measures.
+
+## Convergence
+
+To assess the convergence of our chains, we performed a visual inspection of the trace plots and the autocorrelation plots and a statistical test such as the Gelman-Rubin diagnostic test.
+
+Looking at the trace plots of the coefficients $\alpha$ and $\beta$, there seem to be large steps between the successive draws and the chain does not seem to stay in the same state for too long (i.e., not highly autocorrelated). This indicates independent sampling behavior since the chains run quickly through the posterior distribution. Furthermore, independent of the starting point, the chains rapidly start sampling from the same distribution.
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig1.png" >
+  <h4 align="center">Figure 1: Trace plot for $\alpha$ and $\beta$ for normal priors</h4>
+</p>
+<br/>
+
+
+The autocorrelation plots do not indicate high autocorrelation issue as well. Indeed, autocorrelation is larger at short lags but remains around zero as the lag increases. This means that, in comparison with a high autocorrelation chain, we can take a shorter burn in part because it takes fewer iterations to forget the initial position, and it also means that the remaining part needs a shorter period to obtain stable posterior measures.
+Figure 2.
+
+
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig2.png" >
+  <h4 align="center">Figure 2: Autocorrelation plot for $\alpha$ and $\beta$ for normal priors </h4>
+</p>
+<br/>
+
+Gelman-Rubin diagnostic test is a more formal way of assessing convergence. It measures whether there is a significant difference between the within-chain and between-chain variance by a value called “potential scale reduction factors”. A value substantially above 1 indicates a lack of convergence. Because the point estimate for the factor of 𝛼 and 𝛽 are equal to 1, we do not have a reason to believe in non-convergence. Figure 3 also illustrates how the potential scale reduction factor changes as the number of iterations increases. Again, this indicates no anomaly as the values are not substantially above 1 and the factors approach 1 as iteration increases.
+
+
+
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig3.png" >
+  <h4 align="center">Figure 3: Gelman-Rubin diagnostic plot for normal priors </h4>
+</p>
+<br/>
+
+
+We could say that the number of burn-in values and iterations are sufficient since there seems to be convergence in both chains, which also ensures the stability of the posterior measures.
+
+As a side note, the vague normal prior has the potential of being rather informative in the context of non-linear transformations, as is the case for the logit link in logistic regression. Even though a high variance normal distribution might be uninformative at the level of the linear coefficient, this is no longer the case in the probability scale, which becomes informative as it displays a bimodal distribution centered at 0 and 1. Alternative prior (e.g., t-distribution), attain a uniform probability distribution over 0 and 1 after transformation of the logistic regression coefficients. Nevertheless, in some scenarios, the transformation of a vague normal prior is not impactful (Northrup and Gerber, 2019). The following plots illustrate such priors:
+
+
+``<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig4.png" >
+  <h4 align="center">Figure 4: Transformation of vague priors</h4>
+</p>
+<br/>
+
+## Sensitivity Analysis
+
+Sensitivity analysis is the practice of understanding the variation and uncertainty of the posterior inferences as a result of a different prior or model used in the analysis. For example, we might want to compare different priors, and compare the results of the separate analyses. we perform a sensitivity analysis by changing the prior distribution for the dose effect into a t-distribution with 4 degrees of freedom.
+
+Using the same MCMC settings (i.e., initial values for the chains, number of iterations, and burn-in part), we again took 2 MCMC chains but this time using a different prior for 𝛼 and 𝛽, which is given by:
+
+<h5 align="center">$\alpha \sim t_4\\ \beta \sim t_4$</h5>
+
+The model specification used in the software is given by:
+
+
+
+Looking at the trace, autocorrelation, and Gelman-Rubin diagnostic plots, we do not have a strong reason to believe there is high autocorrelation in the samples. At this point, both chains converged well using Normal and t-distribution priors. The posterior summary measures will be presented in the subsequent part to assess the sensitivity of the priors used.
+
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig5.png" >
+  <h4 align="center">Figure 5: Trace plot for $\alpha$ and $\beta$ for $t$-distribution priors </h4>
+</p>
+<br/>
+
+
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig6.png" >
+  <h4 align="center">Figure 6: Autocorrelation plot for $\alpha$ and $\beta$ for $t$-distribution priors Graph</h4>
+</p>
+<br/>
+
+
+
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig7.png" >
+  <h4 align="center">Figure 7: Gelman-Rubin diagnostic t for $t$-distribution priors Graph</h4>
+</p>
+<br/>
+
+## Summary of posterior distributions
+
+Table 2 presents the posterior measures of the samples obtained using different priors for $\alpha$ and $\beta$ (after discarding the burn-in period). As could be expected from using vague priors, the posterior mean obtained from the MCMC procedure is close to the maximum likelihood estimates ( $\alpha$: -1.788 vs -1.782; $\beta$: 0.018 vs 0.018) and the posterior standard deviation is small. The posterior mean, standard deviation, and the 95% highest (posterior) density (HPD) interval for $\beta$ are almost the same between the priors used while the estimates for $\alpha$ are not too far away from each other. In other words, the choice of vague prior (i.e., whether Normal or $t$-distribution) does not seem to affect the posterior measures much.
+
+To assess the accuracy of the posterior estimates, we have evaluated the Monte Carlo standard error (or Time-series SE) against the posterior standard deviation. If this value is less than 5% of the posterior standard deviation, then it indicates that the samples obtained are enough. The TSSE/SD column from table 2 gives the relationship of the Monte Carlo standard error and the posterior standard deviation. We could see that the estimates obtained from the Normal and $t$-distribution priors are accurate as the TSSE/SD value is less than 5% for both parameters.
+
+<br/>
+<p align="center">
+
+|  | Mean |  SD   |   HDP Interval    | Time-series SE| TSSE/SD|
+|:------------|-------:|-------:|-------:|--------------------:|--------------------:|
+|  Normal priors with mean 0 and variance 10000|
+|  $\alpha$    | -1.788| 0.130| [-2.053, -1.540]| 0.002| 0.013|
+|  $\beta$    | 0.018 |0.001| [0.016, 0.021]| 0.000| 0.014|
+|  $t$-distribution priors with 4 degrees of freedom |
+|  $\alpha$    |-1.789 | 0.128| [-2.046, -1.545]| 0.002 |0.012|
+|  $\beta$    | 0.018 | 0.001| [0.016, 0.020]| 0.000| 0.013|
+
+
+  <h4 align="center">Table 2: Posterior measures.</h4>
+</p>
+<br/>
+
+The 95% HPD interval, which contains 95% of the most plausible estimates, does not include 0. We can therefore say that there is a dose-effect. When no dose is administrated, the odds of having malformations is equal to exp(-1.788) = 0.167 while a 10-point increase in the dose level is associated with an odds of exp(-1.788+0.018*10) = 0.201. Indeed, the odds increase as the dose increases.
+The smooth density plots for $\alpha$ and $\beta$ in the case of the normal prior (Figure 8) and the $t$-distributed prior (Figure 9) are consistent with each other, displaying a similar distribution, supporting the idea that they are approximating the same true posterior distribution.
+
+```{r Figure 8. Density plots of 𝛼 and 𝛽 for Normal prio }
+
+```
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig8.png" >
+  <h4 align="center">Figure 8: Density plot of $\alpha$ and $\beta$ with normal priors </h4>
+</p>
+<br/>
+
+```{r Figure 9. Density plots of 𝛼 and 𝛽 for Normal prio }
+
+```
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig9.png" >
+  <h4 align="center">Figure 9: Density plot of $\alpha$ and $\beta$ with $t$-distribution priors </h4>
+</p>
+<br/>
+
+## posterior dose-response relationship
+
+The posterior dose-response relationship was computed by plugging in the posterior mean of $\alpha$ and $\beta$ in this formula:
+
+<h3 align="center">$\hat{\pi} = \left(\frac{exp(\hat{\alpha} \ + \ \hat{\beta} \ d_i)}{1 +exp(\hat{\alpha} \ + \ \hat{\beta} \ d_i)} \right)$</h3>
+
+On the other hand, the observed probability was derived from 𝑦/𝑁. Figure 10 displays the plot of the posterior dose-response relationship against the observed probabilities of a malformation per dose, where it is apparent that there is only a little difference among the posteriors obtained using different priors. Also, even though the posterior probabilities do not exactly represent the observed probabilities, it captures the trend rather well (except at dose 62.5). Overall, the probability of malformation increases together with dose, but this rate slows down starting at around dose 250.
+
+
+```{r Figure 10. Plot of the posterior dose-response relationship and observed probabilities }
+
+```
+
+<br/>
+<p align="center">
+  <img src="C:\Users\PERROMALO\OneDrive - KU Leuven\Desktop\GitHub repositories\Bayesian-Dose-Response-Analysis-and-Bayesian-Prevalence-Assessment\images\fig10.png" >
+  <h4 align="center">Figure 10: Posterior dose-response relationship and observed probabilities</h4>
+</p>
+<br/>
+safe level of exposure can be defined as a dose corresponding to a very small increase in excess risk of $q$, e.g. $q$ = 0.01. This is called the Benchmark dose (BMD) $d^∗$ and can be obtained by solving the equation:
+
+<h5 align="center">$r(d^∗)= \frac{P(d^∗)-P(0)}{1-P(0)}= q$,</h5>
+
+with $P(d)$ the probability of an adverse effect at dose level $d$. For a logistic regression with a linear dose model, the BMD is given by:
+
+<h5 align="center">$BMD=\frac{logit(d^*)-\alpha}{\beta}=q$</h5>
+
+with $q∗ = q(1−P(0))+P(0)$. We proceed to determine the posterior estimate of the safe level of exposure for EG corresponding with an excess risk of $q = 0.01$.
+
+To get the posterior distribution of BMD, the following lines were added in the model specification:
+
+<br/>
+<p align="center">
+
+|   Prior |  Mean   |   HDP Interval    |
+|:------------|-------:|--------------------:|
+|  Normal    |  3.740|  [3.250, 4.233]     |
+|  $t$-distribution    |  3.745  | [3.230, 4.240]      |
+
+  <h4 align="center">Table 4: Estimate of the safe level of exposure.</h4>
+</p>
+<br/>
+
+The posterior mean value for BMD (using different priors) is given in Table 3. Using the Normal prior, the posterior mean value for BMD is 3.740 and the corresponding HPD interval is [3.250, 4.233]. To be certain that the increase of excess risk is kept at $q=0.01$, the lower bound of the interval was taken as the Benchmark dose (i.e., 3.250).
+
+
+
+
+Finally we predict the number of malformations at dose 100 for 240 exposed fetuses at dose level 100:
+
+
+<br/>
+<p align="center">
+
+|   Prior |  Mean   |   HDP Interval    |
+|:------------|-------:|--------------------:|
+|  Normal    |  122.478 |  [103, 138]     |
+|  $t$-distribution    |    122.325    | [104, 139]         |
+
+  <h4 align="center">Table 5: Predicted number of malformations.</h4>
+</p>
+<br/>
+
+
+
+
+The corresponding predicted number of malformations and credibility intervals are given in the table below. Around 122 malformations could be expected from 240 exposed fetuses at dose level 100.
+
+
+</div >
